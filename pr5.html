@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор надійності систем електропередачі</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .section {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f4fc;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .comparison {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .comparison-item {
+            width: 48%;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Калькулятор надійності систем електропередачі</h1>
+    
+    <div class="section">
+        <h2>1. Порівняння надійності одноколової та двоколової систем</h2>
+        
+        <div class="input-group">
+            <label for="breaker_freq">Частота відмов вимикача 110 кВ (рік⁻¹):</label>
+            <input type="number" id="breaker_freq" step="0.001" value="0.01">
+        </div>
+        
+        <div class="input-group">
+            <label for="line_length">Довжина ПЛ-110 кВ (км):</label>
+            <input type="number" id="line_length" step="1" value="10">
+        </div>
+        
+        <div class="input-group">
+            <label for="transformer_freq">Частота відмов трансформатора 110/10 кВ (рік⁻¹):</label>
+            <input type="number" id="transformer_freq" step="0.001" value="0.015">
+        </div>
+        
+        <div class="input-group">
+            <label for="input_breaker_freq">Частота відмов ввідного вимикача 10 кВ (рік⁻¹):</label>
+            <input type="number" id="input_breaker_freq" step="0.001" value="0.02">
+        </div>
+        
+        <div class="input-group">
+            <label for="connections_count">Кількість приєднань 10 кВ:</label>
+            <input type="number" id="connections_count" step="1" value="6">
+        </div>
+        
+        <div class="input-group">
+            <label for="section_breaker_freq">Частота відмов секційного вимикача (рік⁻¹):</label>
+            <input type="number" id="section_breaker_freq" step="0.001" value="0.02">
+        </div>
+        
+        <button onclick="calculateReliability()">Розрахувати надійність</button>
+        
+        <div id="reliability_result" class="result" style="display: none;">
+            <h3>Результати розрахунку надійності</h3>
+            <div class="comparison">
+                <div class="comparison-item">
+                    <h4>Одноколова система</h4>
+                    <p><strong>Частота відмов:</strong> <span id="single_circuit_freq"></span> рік⁻¹</p>
+                    <p><strong>Коефіцієнт аварійного простою:</strong> <span id="single_circuit_ka"></span></p>
+                    <p><strong>Коефіцієнт планового простою:</strong> <span id="single_circuit_kp"></span></p>
+                </div>
+                <div class="comparison-item">
+                    <h4>Двоколова система</h4>
+                    <p><strong>Частота відмов:</strong> <span id="double_circuit_freq"></span> рік⁻¹</p>
+                    <p><strong>Коефіцієнт аварійного простою:</strong> <span id="double_circuit_ka"></span></p>
+                </div>
+            </div>
+            <p><strong>Висновок:</strong> <span id="reliability_conclusion"></span></p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>2. Розрахунок збитків від перерв електропостачання</h2>
+        
+        <div class="input-group">
+            <label for="damage_emergency">Питомі збитки від аварійних перерв (грн/кВт·год):</label>
+            <input type="number" id="damage_emergency" step="0.1" value="23.6">
+        </div>
+        
+        <div class="input-group">
+            <label for="damage_planned">Питомі збитки від планових перерв (грн/кВт·год):</label>
+            <input type="number" id="damage_planned" step="0.1" value="17.6">
+        </div>
+        
+        <div class="input-group">
+            <label for="transformer_freq2">Частота відмов трансформатора (рік⁻¹):</label>
+            <input type="number" id="transformer_freq2" step="0.001" value="0.01">
+        </div>
+        
+        <div class="input-group">
+            <label for="recovery_time">Час відновлення (год):</label>
+            <input type="number" id="recovery_time" step="1" value="45">
+        </div>
+        
+        <div class="input-group">
+            <label for="planned_downtime">Коефіцієнт планового простою:</label>
+            <input type="number" id="planned_downtime" step="0.0001" value="0.004">
+        </div>
+        
+        <div class="input-group">
+            <label for="max_load">Максимальне навантаження (кВт):</label>
+            <input type="number" id="max_load" step="100" value="5120">
+        </div>
+        
+        <div class="input-group">
+            <label for="load_hours">Час використання максимального навантаження (год):</label>
+            <input type="number" id="load_hours" step="100" value="6451">
+        </div>
+        
+        <button onclick="calculateDamages()">Розрахувати збитки</button>
+        
+        <div id="damage_result" class="result" style="display: none;">
+            <h3>Результати розрахунку збитків</h3>
+            <p><strong>Аварійне недовідпущення електроенергії:</strong> <span id="emergency_undelivered"></span> кВт·год</p>
+            <p><strong>Планове недовідпущення електроенергії:</strong> <span id="planned_undelivered"></span> кВт·год</p>
+            <p><strong>Очікувані річні збитки:</strong> <span id="total_damages"></span> грн</p>
+            <p><strong>Висновок:</strong> <span id="damage_conclusion"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Функція для розрахунку надійності систем
+        function calculateReliability() {
+            // Отримуємо вхідні дані
+            const breakerFreq = parseFloat(document.getElementById('breaker_freq').value);
+            const lineLength = parseFloat(document.getElementById('line_length').value);
+            const transformerFreq = parseFloat(document.getElementById('transformer_freq').value);
+            const inputBreakerFreq = parseFloat(document.getElementById('input_breaker_freq').value);
+            const connectionsCount = parseFloat(document.getElementById('connections_count').value);
+            const sectionBreakerFreq = parseFloat(document.getElementById('section_breaker_freq').value);
+            
+            // Частота відмов для ПЛ-110 кВ (0.007 на км)
+            const lineFreq = 0.007 * lineLength;
+            
+            // Частота відмов для приєднань (0.03 на приєднання)
+            const connectionsFreq = 0.03 * connectionsCount;
+            
+            // Розрахунок для одноколової системи
+            const singleCircuitFreq = breakerFreq + lineFreq + transformerFreq + inputBreakerFreq + connectionsFreq;
+            
+            // Середній час відновлення (в годинах)
+            const avgRecoveryTime = (
+                breakerFreq * 30 + 
+                lineFreq * 10 + 
+                transformerFreq * 100 + 
+                inputBreakerFreq * 15 + 
+                connectionsFreq * 2
+            ) / singleCircuitFreq;
+            
+            // Коефіцієнт аварійного простою
+            const ka = (singleCircuitFreq * avgRecoveryTime) / 8760;
+            
+            // Коефіцієнт планового простою (найбільший для трансформатора)
+            const kp = 1.2 * (43 / 8760);
+            
+            // Розрахунок для двоколової системи
+            const doubleCircuitFreq = 2 * singleCircuitFreq * (ka + kp) + sectionBreakerFreq;
+            
+            // Відображення результатів
+            document.getElementById('single_circuit_freq').textContent = singleCircuitFreq.toFixed(4);
+            document.getElementById('single_circuit_ka').textContent = ka.toExponential(2);
+            document.getElementById('single_circuit_kp').textContent = kp.toExponential(2);
+            document.getElementById('double_circuit_freq').textContent = doubleCircuitFreq.toFixed(6);
+            document.getElementById('double_circuit_ka').textContent = (doubleCircuitFreq * avgRecoveryTime / 8760).toExponential(2);
+            
+            // Висновок
+            const conclusion = doubleCircuitFreq < singleCircuitFreq ? 
+                "Двоколова система має значно вищу надійність порівняно з одноколовою." :
+                "Двоколова система не демонструє покращення надійності. Перевірте вхідні параметри.";
+            document.getElementById('reliability_conclusion').textContent = conclusion;
+            
+            document.getElementById('reliability_result').style.display = 'block';
+        }
+        
+        // Функція для розрахунку збитків
+        function calculateDamages() {
+            // Отримуємо вхідні дані
+            const damageEmergency = parseFloat(document.getElementById('damage_emergency').value);
+            const damagePlanned = parseFloat(document.getElementById('damage_planned').value);
+            const transformerFreq = parseFloat(document.getElementById('transformer_freq2').value);
+            const recoveryTime = parseFloat(document.getElementById('recovery_time').value);
+            const plannedDowntime = parseFloat(document.getElementById('planned_downtime').value);
+            const maxLoad = parseFloat(document.getElementById('max_load').value);
+            const loadHours = parseFloat(document.getElementById('load_hours').value);
+            
+            // Розрахунок аварійного недовідпущення
+            const emergencyUndelivered = transformerFreq * (recoveryTime / 8760) * maxLoad * loadHours;
+            
+            // Розрахунок планового недовідпущення
+            const plannedUndelivered = plannedDowntime * maxLoad * loadHours;
+            
+            // Розрахунок загальних збитків
+            const totalDamages = damageEmergency * emergencyUndelivered + damagePlanned * plannedUndelivered;
+            
+            // Відображення результатів
+            document.getElementById('emergency_undelivered').textContent = Math.round(emergencyUndelivered).toLocaleString();
+            document.getElementById('planned_undelivered').textContent = Math.round(plannedUndelivered).toLocaleString();
+            document.getElementById('total_damages').textContent = Math.round(totalDamages).toLocaleString();
+            
+            // Висновок
+            const conclusion = `Очікувані річні збитки від перерв електропостачання складають приблизно ${Math.round(totalDamages/1000000 * 10)/10} млн грн.`;
+            document.getElementById('damage_conclusion').textContent = conclusion;
+            
+            document.getElementById('damage_result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
